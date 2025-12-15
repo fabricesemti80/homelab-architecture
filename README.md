@@ -4,7 +4,9 @@ Welcome to the documentation for my homelab setup. This repository contains deta
 
 ## Contents
 
-- [Network Documentation](docs/network.md) - Physical network devices with Mermaid visualizations and descriptions.
-- [Physical Hosts](docs/physicalhosts.md) - Physical machines with descriptions and diagrams.
+- [Network](docs/network.md) - Detailed network design, including VLANs, subnets, and firewall rules.
+- [Hardware](docs/hardware.md) - An overview of the physical servers and network gear.
+- [Services](docs/services.md) - A list of services running in the homelab.
+- [DNS Strategy](docs/dns.md) - The DNS resolution strategy for the network.
 
-Additional documentation files will be added to this repository as the homelab evolves.
+This documentation is actively maintained and will be updated as the homelab evolves.
