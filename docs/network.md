@@ -51,7 +51,7 @@ The DNS strategy for the homelab is designed to provide a balance of security, p
 
 The main points are as follows:
 
-*   **Upstream DNS:** The primary DNS provider is NextDNS, configured directly on the Unifi Dream Machine. This provides filtering and analytics for all DNS traffic that passes through the router.
+*   **Upstream DNS:** The primary DNS provider is [NextDNS](https://my.nextdns.io/1fd436/setup), configured directly on the Unifi Dream Machine. This provides filtering and analytics for all DNS traffic that passes through the router.
 *   **Internal DNS:** Most networks and VLANs use the Unifi Dream Machine as their DNS resolver. While the router IP (e.g., `10.0.10.1`) is configured as the DNS server in the network settings, the router itself forwards all DNS requests to NextDNS, providing a unified filtering layer.
 *   **Exceptions:** The `GUEST` and `IOT` networks are configured to use OpenDNS servers directly. This is done to isolate the traffic from these networks and to provide an additional layer of security.
 *   **Domain Names:** The internal domain `krapulax.home` is used for internal services, while the public domain `krapulax.dev` is used for services exposed to the internet.
