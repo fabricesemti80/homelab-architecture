@@ -12,30 +12,23 @@ The list includes only devices set up with fixed IPs or holding critical roles. 
     - **Role**: NFS Storage
     - **OS**: QTS
     - **IP**: `10.0.40.2`
+    - **DNS**: `qnap.krapulax.home` (TBD)
     - **Notes**: Provides NFS for Proxmox (ISO, Backup), Docker data, Media files, K8s data. Ports: 80, 443, 22.
 
 - **Proxmox Nodes (x3)**
     - **Role**: Hypervisor
     - **Hardware**: Minisforum Mini PCs
     - **OS**: Proxmox VE
+    - **IP**: `10.0.40.10`,`10.0.40.11`,`10.0.40.12`
+    - **DNS**: `pve-0.krapulax.home`,`pve-1.krapulax.home`,`pve-2.krapulax.home` (TBD)
     - **Notes**: Hosts VMs and Containers (including Docker media server).
 
 - **Ceph Nodes (x3)**
     - **Role**: Distributed Storage
     - **Hardware**: Minisforum Mini PCs
     - **OS**: Proxmox VE
+    - **IP**: `10.0.50.10`,`10.0.50.11`,`10.0.50.12` *(TBD; currently still on 10.0.70.0/24...)*
     - **Notes**: Dedicated storage cluster nodes.
-
-- **Docker Media Server**
-    - **Role**: Application Server
-    - **OS**: Linux
-    - **Notes**: Hosted on Proxmox.
-
-- **Pi Zeros (x2)**
-    - **Role**: Utility / DNS
-    - **Hardware**: Raspberry Pi Zero
-    - **OS**: Linux
-    - **Notes**: Connected to UDM-PRO. Potential future home for DHCP.
 
 ### Network Gear
 
