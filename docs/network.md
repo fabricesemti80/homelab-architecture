@@ -4,19 +4,17 @@ This document describes the network setup in the homelab. The network architectu
 
 ## Networks
 
-The following networks are present:
+The following networks are present. VLAN IDs correspond to the third octet of the subnet.
 
-| VLAN id | VLAN name | Subnet CIDR | DFGW | DHCP allowed | DHCP Scope | DNS servers | FW rules |
-|---|---|---|---|---|---|---|---|
-| Default | 192.168.1.0/24 | 192.168.1.1 | True | 192.168.1.1 - 192.168.1.254 | 192.168.1.1 | ALLOW ALL |
-10 | USERS | 10.0.10.0/24 | 10.0.10.1 | True | 10.0.10.10 - 10.0.10.250 | 10.0.10.1 | ALLOW ALL |
-20 | IOT | 10.0.20.0/24 | 10.0.20.1 | True | 10.0.20.10 - 10.0.20.250 | 208.67.222.222, 208.67.220.220 | ISOLATED |
-30 | GUEST | 10.0.30.0/24 | 10.0.30.1 | True | 10.0.30.10 - 10.0.30.250 | 208.67.222.222, 208.67.220.220 | ISOLATED |
-40 | SERVERS | 10.0.40.0/24 | 10.0.40.1 | False | | 10.0.40.1 | ALLOWED from USERS, SERVERS, MGMT |
-50 | MGMT | 10.0.50.0/24 | 10.0.50.1 | False | | 10.0.50.1 | ALLOWED from USERS |
-60 | K8S-NODES | 10.0.60.0/24 | 10.0.60.1 | False | | 10.0.60.1 | ALLOWED from USERS, SERVERS, MGMT |
-70 | K8S-SERVICES | 10.0.70.0/22 | | | | | |
-80 | K8S-PODS | 10.0.80.0/22 | | | | | |
+| VLAN id | Network Name | Subnet CIDR    | Description                                 | DNS Servers                          | FW Rules    |
+| ------- | ------------ | -------------- | ------------------------------------------- | ------------------------------------ | ----------- |
+| 1       | Default      | 192.168.1.0/24 | Management LAN (Unifi Devices)              | `192.168.1.1` (Router)               | Allow All   |
+| 10      | USERS        | 10.0.10.0/24   | Trusted devices (Laptops, Phones)           | `10.0.10.1` (Router)                 | Allow All   |
+| 20      | IOT          | 10.0.20.0/24   | IoT Devices                                 | `208.67.222.222`<br>`208.67.220.220` | Isolated    |
+| 30      | DEV-INFRA    | 10.0.30.0/24   | Development Infrastructure (K8s Nodes/Pods) | `10.0.30.1` (Router)                 | Restricted  |
+| 40      | PROD-INFRA   | 10.0.40.0/24   | Production Infrastructure                   | `10.0.40.1` (Router)                 | Restricted  |
+| 50      | PROD-CEPH    | 10.0.50.0/24   | Dedicated Storage Cluster Network           | -                                    | No Internet |
+| 80      | GUEST        | 10.0.80.0/24   | Guest Network                               | `208.67.222.222`<br>`208.67.220.220` | Isolated    |
 
 ## Network Diagram
 
@@ -27,31 +25,38 @@ graph TB
     DEF["Default<br/>192.168.1.0/24"]
     USR["USERS<br/>10.0.10.0/24"]
     IOT["IOT<br/>10.0.20.0/24"]
-    GST["GUEST<br/>10.0.30.0/24"]
-    SRV["SERVERS<br/>10.0.40.0/24"]
-    MGM["MGMT<br/>10.0.50.0/24"]
-    K8N["K8S-NODES<br/>10.0.60.0/24"]
-    K8S["K8S-SERVICES<br/>10.0.70.0/22"]
-    K8P["K8S-PODS<br/>10.0.80.0/22"]
+    DEV["DEV-INFRA<br/>10.0.30.0/24"]
+    PROD["PROD-INFRA<br/>10.0.40.0/24"]
+    CEPH["PROD-CEPH<br/>10.0.50.0/24"]
+    GST["GUEST<br/>10.0.80.0/24"]
 
     UDM --> DEF
     UDM --> USR
     UDM --> IOT
+    UDM --> DEV
+    UDM --> PROD
+    UDM --> CEPH
     UDM --> GST
-    UDM --> SRV
-    UDM --> MGM
-    UDM --> K8N
-    UDM --> K8S
-    UDM --> K8P
 ```
 
-## DNS
+## DNS Strategy
 
-The DNS strategy for the homelab is designed to provide a balance of security, privacy, and performance. For a detailed description of the DNS configuration, please refer to the [DNS Strategy](dns.md) document.
+The DNS strategy balances security, privacy, and performance.
 
-The main points are as follows:
+### Standard Configuration (NextDNS)
+For most networks (`Default`, `USERS`, `DEV-INFRA`, `PROD-INFRA`), the DNS server provided via DHCP is the **Router's IP address** for that specific subnet (e.g., `10.0.10.1`).
 
-*   **Upstream DNS:** The primary DNS provider is [NextDNS](https://my.nextdns.io/1fd436/setup), configured directly on the Unifi Dream Machine. This provides filtering and analytics for all DNS traffic that passes through the router.
-*   **Internal DNS:** Most networks and VLANs use the Unifi Dream Machine as their DNS resolver. While the router IP (e.g., `10.0.10.1`) is configured as the DNS server in the network settings, the router itself forwards all DNS requests to NextDNS, providing a unified filtering layer.
-*   **Exceptions:** The `GUEST` and `IOT` networks are configured to use OpenDNS servers directly. This is done to isolate the traffic from these networks and to provide an additional layer of security.
-*   **Domain Names:** The internal domain `krapulax.home` is used for internal services, while the public domain `krapulax.dev` is used for services exposed to the internet.
+The Router (UDM-PRO) is configured to forward these requests to **NextDNS** as the upstream provider.
+*   **NextDNS Upstream IPs**:
+    *   `45.90.28.45`
+    *   `45.90.30.45`
+
+### Exceptions (OpenDNS)
+The `IOT` and `GUEST` networks bypass the internal resolver to ensure isolation. Clients on these networks are assigned **OpenDNS** servers directly via DHCP.
+*   **OpenDNS IPs**:
+    *   `208.67.222.222`
+    *   `208.67.220.220`
+
+### Domain Resolution
+*   **Internal**: `krapulax.home` (Managed by UDM-PRO)
+*   **Public**: `krapulax.dev` (Managed by Cloudflare)
