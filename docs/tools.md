@@ -12,3 +12,8 @@ Mainly mentioning here some providers I am using.
 ## Ansible
 
 - [OnePassword lookup](https://docs.ansible.com/projects/ansible/latest/collections/community/general/onepassword_lookup.html)
+
+## 1Password
+
+For details on how 1Password is integrated into the automation workflow, see the [1Password Usage Guide](tools/1password_usage.md).
+
