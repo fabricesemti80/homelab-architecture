@@ -41,7 +41,52 @@ This document provides an overview of the services running in the homelab.
   - Hosted on Docker
   - *Specific media apps (e.g., Plex, Jellyfin)*
   - *Download clients*
+  - services
+    - [ ] authentik
+    - [ ] autobrr
+    - [ ] bazarr
+    - [ ] calibre
+    - [ ] checkrr
+    - [ ] deluge
+    - [ ] emby
+    - [ ] flaresolverr
+    - [ ] heimdall
+    - [X] homepage
+    - [ ] huntarr
+    - [X] jellyfin
+    - [ ] jellyseerr
+    - [ ] kavita
+    - [ ] lidarr
+    - [ ] maintainerr
+    - [ ] netdata
+    - [ ] notifiarr
+    - [ ] nzbget
+    - [x] overseerr
+    - [ ] pasta
+    - [ ] pinchflat
+    - [X] plex
+    - [ ] portainer
+    - [ ] prowlarr
+    - [ ] qbittorrent
+    - [X] radarr
+    - [ ] readarr
+    - [ ] recyclarr
+    - [ ] requestrr
+    - [X] sabnzbd
+    - [X] sonarr
+    - [ ] speedtest-tracker
+    - [ ] tautulli
+    - [ ] tdarr
+    - [ ] tinymediamanager
+    - [X] traefik
+    - [ ] transmission
+    - [ ] tubearchivist
+    - [ ] unpackerr
+    - [ ] uptimekuma
+    - [ ] wizarr
+
 - **Home Automation**
   - *To be added*
+  
 - **Monitoring**
   - *To be added*
