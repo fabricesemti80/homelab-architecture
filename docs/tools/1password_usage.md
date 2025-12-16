@@ -9,6 +9,7 @@ We utilize 1Password to avoid storing secrets in plain text (`.env` files) on th
 ## Setup
 
 ### 1Password CLI (`op`)
+
 The foundation of the integration is the `op` CLI tool. It must be installed and authenticated on the management machine.
 
 ```bash
@@ -21,10 +22,11 @@ op account list
 For automated environments (CI/CD, scripts) where manual login is not possible, we use 1Password Service Accounts. This allows authentication via a single environment variable.
 
 **Step 1: Create Service Account**
-1.  Log in to 1Password.com.
-2.  Navigate to **Developer Tools** > **Service Accounts**.
-3.  Click **Create Service Account**, name it (e.g., `Homelab-Automation`), and choose the specific vaults it can access.
-4.  **Save the Service Account Token** immediately. You won't be able to see it again.
+
+1. Log in to 1Password.com.
+2. Navigate to **Developer Tools** > **Service Accounts**.
+3. Click **Create Service Account**, name it (e.g., `Homelab-Automation`), and choose the specific vaults it can access.
+4. **Save the Service Account Token** immediately. You won't be able to see it again.
 
 **Step 2: Configure Environment**
 Set the `OP_SERVICE_ACCOUNT_TOKEN` environment variable on the machine running your scripts or automation.
@@ -50,18 +52,20 @@ Once the environment variable is set, tools like the Terraform provider and `op 
 ## Integrations
 
 ### Terraform / OpenTofu
+
 We use the **1Password Provider** to inject secrets directly into Terraform resources.
 
-*   **Provider**: `1password/onepassword`
-*   **Usage**: Secrets are referenced by their vault item ID or path.
-*   **Auth**: Automatically detects `OP_SERVICE_ACCOUNT_TOKEN`.
+* **Provider**: `1password/onepassword`
+* **Usage**: Secrets are referenced by their vault item ID or path.
+* **Auth**: Automatically detects `OP_SERVICE_ACCOUNT_TOKEN`.
 
 ### Ansible
+
 We use the **1Password Lookup Plugin** to retrieve secrets during playbook execution.
 
-*   **Collection**: `community.general.onepassword_lookup`
-*   **Usage**: Variables are populated dynamically at runtime.
-*   **Auth**: Requires the `op` CLI to be authenticated (via the token env var) on the controller node.
+* **Collection**: `community.general.onepassword_lookup`
+* **Usage**: Variables are populated dynamically at runtime.
+* **Auth**: Requires the `op` CLI to be authenticated (via the token env var) on the controller node.
 
 ```yaml
 # Example

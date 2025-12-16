@@ -46,19 +46,24 @@ For a comprehensive overview of the DNS configuration, see the [DNS Strategy](dn
 The DNS strategy balances security, privacy, and performance.
 
 ### Standard Configuration (NextDNS)
+
 For most networks (`Default`, `USERS`, `DEV-INFRA`, `PROD-INFRA`), the DNS server provided via DHCP is the **Router's IP address** for that specific subnet (e.g., `10.0.10.1`).
 
 The Router (UDM-PRO) is configured to forward these requests to **NextDNS** as the upstream provider.
-*   **NextDNS Upstream IPs**:
-    *   `45.90.28.45`
-    *   `45.90.30.45`
+
+* **NextDNS Upstream IPs**:
+  * `45.90.28.45`
+  * `45.90.30.45`
 
 ### Exceptions (OpenDNS)
+
 The `IOT` and `GUEST` networks bypass the internal resolver to ensure isolation. Clients on these networks are assigned **OpenDNS** servers directly via DHCP.
-*   **OpenDNS IPs**:
-    *   `208.67.222.222`
-    *   `208.67.220.220`
+
+* **OpenDNS IPs**:
+  * `208.67.222.222`
+  * `208.67.220.220`
 
 ### Domain Resolution
-*   **Internal**: `krapulax.home` (Managed by UDM-PRO)
-*   **Public**: `krapulax.dev` (Managed by Cloudflare)
+
+* **Internal**: `krapulax.home` (Managed by UDM-PRO)
+* **Public**: `krapulax.dev` (Managed by Cloudflare)
