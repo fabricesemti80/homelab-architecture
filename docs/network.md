@@ -41,6 +41,8 @@ graph TB
 
 ## DNS Strategy
 
+For a comprehensive overview of the DNS configuration, see the [DNS Strategy](dns.md) document.
+
 The DNS strategy balances security, privacy, and performance.
 
 ### Standard Configuration (NextDNS)

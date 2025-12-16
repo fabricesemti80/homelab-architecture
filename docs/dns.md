@@ -34,3 +34,9 @@ For internal network resolution, the domain `krapulax.home` is used. DNS records
 ## Public DNS
 
 For services that are accessible from the internet, the domain `krapulax.dev` is used. The DNS records for this domain are managed through Cloudflare, which also provides performance and security benefits.
+
+## Tailscale DNS Configuration
+
+Tailscale is configured to use NextDNS as its DNS resolver, following the setup outlined in [Tailscale's NextDNS integration guide](https://tailscale.com/kb/1218/nextdns).
+
+Additionally, Tailscale is set up to use the Unifi router (10.0.40.1) for name resolution within the `krapulax.home` domain. This ensures that internal services are resolvable via Tailscale while maintaining the DNS records management through the Unifi router.
