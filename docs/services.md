@@ -8,11 +8,17 @@ This document provides an overview of the services running in the homelab.
   - Provided by UDM-PRO
   - Scope: All VLANs
 - **DNS**
-  - Upstream: Quad9 (via UDM-PRO)
-  - Internal: UDM-PRO (`krapulax.home`)
-  - Guest/IoT: OpenDNS
+  - **Primary Resolver**: AdGuard Home (`gatekeeper-53`)
+  - **Internal Resolver**: UDM-PRO (`krapulax.home`)
+  - **Upstream**: Quad9
+  - **Guest/IoT**: OpenDNS
 - **VPN**
   - *To be configured / documented*
+
+- **AdGuard Home (`gatekeeper-53`)**
+  - **Host**: Proxmox LXC Container
+  - **IP Address**: `10.0.40.53`
+  - **Purpose**: Network-wide DNS filtering and ad-blocking.
 
 ## Storage Services
 

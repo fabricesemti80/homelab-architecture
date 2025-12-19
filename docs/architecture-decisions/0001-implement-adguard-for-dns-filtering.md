@@ -26,7 +26,7 @@ Chosen option: **AdGuard Home**, because it provides a powerful, self-hosted DNS
 
 ### Implementation Details
 
-*   An AdGuard Home instance is deployed at `10.0.40.53`.
-*   DHCP settings for trusted networks are updated to use AdGuard Home as the primary DNS server.
+*   An AdGuard Home instance (`gatekeeper-53`) is deployed as a Proxmox LXC container at `10.0.40.53`.
+*   DHCP settings for trusted networks are updated to use `gatekeeper-53` as the primary DNS server.
 *   AdGuard Home is configured with conditional forwarding for the `krapulax.home` domain to the UniFi router.
 *   The UniFi router is configured as a secondary DNS server for fallback.

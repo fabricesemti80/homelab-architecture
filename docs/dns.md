@@ -4,13 +4,27 @@ This document outlines the DNS strategy for the homelab network. The goal is to 
 
 ## DNS Resolution Flow
 
-The primary DNS resolver for trusted networks is an AdGuard Home instance located at `10.0.40.53`.
+The primary DNS resolver for trusted networks is the AdGuard Home instance `gatekeeper-53` (`10.0.40.53`). The diagram below illustrates the query path.
+
+```mermaid
+graph LR
+    Client["Client Device"] -- "DNS Query" --> AdGuard
+
+    subgraph "Resolution Path"
+        AdGuard{"AdGuard Home<br/>gatekeeper-53"} -- "Query for *.krapulax.home?" --> Decision{ }
+        Decision -- "Yes" --> UniFi["UniFi Router<br/>10.0.40.1"]
+        Decision -- "No" --> Quad9["Quad9<br/>dns10.quad9.net"]
+    end
+
+    UniFi -- "Internal IP" --> Client
+    Quad9 -- "External IP" --> Client
+```
 
 The resolution path is as follows:
-1.  **Client Device** sends a DNS query to AdGuard Home (`10.0.40.53`).
+1.  **Client Device** sends a DNS query to AdGuard Home (`gatekeeper-53`).
 2.  **AdGuard Home** filters the request against its blocklists.
 3.  If the query is for the internal `krapulax.home` domain, AdGuard forwards it to the UniFi router (`10.0.40.1`) for local resolution.
-4.  For all other queries, AdGuard forwards them to its configured upstream DNS providers (e.g., Quad9).
+4.  For all other queries, AdGuard forwards them to its configured upstream DNS provider (Quad9).
 
 ## Upstream DNS (AdGuard Configuration)
 
@@ -50,14 +64,14 @@ For services that are accessible from the internet, the domain `krapulax.dev` is
 
 ## Verification
 
-To verify that the AdGuard instance is correctly forwarding local domain queries to the UniFi router, use the `dig` command from a client machine on the network. Point the query directly at the AdGuard server IP (`10.0.40.53`).
+To verify that the AdGuard instance is correctly forwarding local domain queries to the UniFi router, use the `dig` command from a client machine on the network. Point the query directly at the AdGuard server (`gatekeeper-53` or `10.0.40.53`).
 
 A successful query for an internal hostname (e.g., `dokploy.krapulax.home`) should return the correct internal IP address from the AdGuard server, indicating that the conditional forwarding is working.
 
 ### Example Test
 
 ```sh
-dig @10.0.40.53 dokploy.krapulax.home
+dig @gatekeeper-53 dokploy.krapulax.home
 ```
 
 A successful response will look similar to this, showing the internal IP in the `ANSWER SECTION`:
