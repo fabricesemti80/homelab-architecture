@@ -81,8 +81,3 @@ A successful response will look similar to this, showing the internal IP in the 
 dokploy.krapulax.home.	0	IN	A	10.0.30.20
 ```
 
-## Tailscale DNS Configuration
-
-Tailscale is configured to use Quad9 as its DNS resolver.
-
-Additionally, Tailscale is set up to use the UniFi router (10.0.40.1) for name resolution within the `krapulax.home` domain. This ensures that internal services are resolvable via Tailscale while maintaining the DNS records management through the UniFi router.

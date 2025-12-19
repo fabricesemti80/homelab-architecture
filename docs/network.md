@@ -16,6 +16,16 @@ The following networks are present. VLAN IDs correspond to the third octet of th
 | 50      | PROD-CEPH    | 10.0.50.0/24   | Dedicated Storage Cluster Network           | -                                    | No Internet |
 | 80      | GUEST        | 10.0.80.0/24   | Guest Network                               | `208.67.222.222`<br>`208.67.220.220` | Isolated    |
 
+## Virtual Private Networks (VPNs)
+
+### Tailscale
+
+For a detailed overview of the Tailscale setup, see the [Tailscale Configuration](../tools/tailscale.md) document.
+
+Tailscale creates a virtual private network that connects devices directly.
+
+*   **DNS**: Tailscale is configured to use Quad9 as its global DNS resolver. For internal `krapulax.home` domains, it uses the UniFi router (`10.0.40.1`) as a split DNS resolver.
+
 ## Network Diagram
 
 ```mermaid
