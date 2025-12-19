@@ -8,7 +8,7 @@ This document provides an overview of the services running in the homelab.
   - Provided by UDM-PRO
   - Scope: All VLANs
 - **DNS**
-  - Upstream: NextDNS (via UDM-PRO)
+  - Upstream: Quad9 (via UDM-PRO)
   - Internal: UDM-PRO (`krapulax.home`)
   - Guest/IoT: OpenDNS
 - **VPN**

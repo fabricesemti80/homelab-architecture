@@ -9,10 +9,10 @@ The following networks are present. VLAN IDs correspond to the third octet of th
 | VLAN id | Network Name | Subnet CIDR    | Description                                 | DNS Servers                          | FW Rules    |
 | ------- | ------------ | -------------- | ------------------------------------------- | ------------------------------------ | ----------- |
 | 1       | Default      | 192.168.1.0/24 | Management LAN (Unifi Devices)              | `192.168.1.1` (Router)               | Allow All   |
-| 10      | USERS        | 10.0.10.0/24   | Trusted devices (Laptops, Phones)           | `10.0.10.1` (Router)                 | Allow All   |
+| 10      | USERS        | 10.0.10.0/24   | Trusted devices (Laptops, Phones)           | `10.0.40.53` (AdGuard)<br>`10.0.10.1` (Router) | Allow All   |
 | 20      | IOT          | 10.0.20.0/24   | IoT Devices                                 | `208.67.222.222`<br>`208.67.220.220` | Isolated    |
-| 30      | DEV-INFRA    | 10.0.30.0/24   | Development Infrastructure (K8s Nodes/Pods) | `10.0.30.1` (Router)                 | Restricted  |
-| 40      | PROD-INFRA   | 10.0.40.0/24   | Production Infrastructure                   | `10.0.40.1` (Router)                 | Restricted  |
+| 30      | DEV-INFRA    | 10.0.30.0/24   | Development Infrastructure (K8s Nodes/Pods) | `10.0.40.53` (AdGuard)<br>`10.0.30.1` (Router) | Restricted  |
+| 40      | PROD-INFRA   | 10.0.40.0/24   | Production Infrastructure                   | `10.0.40.53` (AdGuard)<br>`10.0.40.1` (Router) | Restricted  |
 | 50      | PROD-CEPH    | 10.0.50.0/24   | Dedicated Storage Cluster Network           | -                                    | No Internet |
 | 80      | GUEST        | 10.0.80.0/24   | Guest Network                               | `208.67.222.222`<br>`208.67.220.220` | Isolated    |
 
@@ -45,15 +45,11 @@ For a comprehensive overview of the DNS configuration, see the [DNS Strategy](dn
 
 The DNS strategy balances security, privacy, and performance.
 
-### Standard Configuration (NextDNS)
+### AdGuard-Based DNS for Trusted Networks
 
-For most networks (`Default`, `USERS`, `DEV-INFRA`, `PROD-INFRA`), the DNS server provided via DHCP is the **Router's IP address** for that specific subnet (e.g., `10.0.10.1`).
+For trusted networks (`USERS`, `DEV-INFRA`, `PROD-INFRA`), the primary DNS server provided via DHCP is the **AdGuard Home instance (`10.0.40.53`)**. The router's IP for each subnet is provided as a secondary DNS server for fallback.
 
-The Router (UDM-PRO) is configured to forward these requests to **NextDNS** as the upstream provider.
-
-* **NextDNS Upstream IPs**:
-  * `45.90.28.45`
-  * `45.90.30.45`
+The AdGuard instance handles ad-blocking and forwards requests for internal domains to the UniFi router and external domains to upstream providers. For more details, see the [DNS Strategy](dns.md) document.
 
 ### Exceptions (OpenDNS)
 

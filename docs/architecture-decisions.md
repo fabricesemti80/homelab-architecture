@@ -4,13 +4,11 @@ This document tracks key architectural decisions, their context, and the future 
 
 ## Decisions
 
-### 1. DNS Strategy (Keep it Simple)
+### 1. DNS Filtering with AdGuard Home
 
-* **Decision**: Continue using the **UDM-PRO** as the *sole* DNS resolver provided via DHCP for internal networks.
-* **Context**:
-  * **Single Source of Truth**: We must NOT add NextDNS IPs (e.g., `45.xx`) as secondary DNS servers in DHCP. Clients might query secondary servers randomly, bypassing the UDM. Since NextDNS does not know about `krapulax.home`, this would cause intermittent resolution failures for internal services.
-  * **Automation**: While dedicated solutions like Technitium or AdGuard Home offer better APIs, the UDM handles the current load adequately.
-* **Future Trigger**: As the migration to Kubernetes accelerates, the need for automated DNS record management (ExternalDNS) will grow. At that point, a dedicated DNS solution (running on a VM/Container, not Pi Zeros due to performance) will be re-evaluated.
+* **Decision**: Implement a self-hosted AdGuard Home instance for network-wide DNS filtering, while retaining the UniFi router for internal DNS resolution.
+* **Context**: This decision was made to enhance network security and block advertisements without sacrificing the convenience of local DNS management provided by the UniFi router.
+* **Details**: For a comprehensive overview of this decision, see [ADR-0001: Implement AdGuard for DNS Filtering](./architecture-decisions/0001-implement-adguard-for-dns-filtering.md).
 
 ### 2. Secret Management
 
@@ -44,4 +42,4 @@ This document tracks key architectural decisions, their context, and the future 
 
 ### Long Term (Scaling)
 
-- [ ] **Advanced DNS**: Deploy Technitium or AdGuard Home (virtualized) to replace UDM DNS when Kubernetes Ingress requirements become complex.
+- [x] **Advanced DNS**: Deployed AdGuard Home for network-wide filtering, as documented in [ADR-0001](./architecture-decisions/0001-implement-adguard-for-dns-filtering.md).
