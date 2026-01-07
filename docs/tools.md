@@ -72,6 +72,6 @@ Automatic environment variable loading based on directory.
 
 DNS, CDN, and Zero Trust access.
 
-- **DNS**: Manages `krapulax.dev` domain
+- **DNS**: Manages `krapulax.dev` / `krapulax.net` domain
 - **Tunnels**: Secure ingress without open firewall ports
 - **Zero Trust**: Email OTP/SSO authentication for external access
