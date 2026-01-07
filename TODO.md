@@ -12,3 +12,7 @@
 ## Blog Deployment
 - [ ] Deploy new blog (possibly on Ghost) to blog.krapulax.dev
   - [ ] Possibly decommission fabricesemti.com
+
+## Learning/Documentation
+- [ ] Add ELI5 comments to Nix machine config for learning purposes
+- [ ] Investigate CI/CD improvement/integration for Nix

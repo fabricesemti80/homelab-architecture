@@ -1,83 +1,89 @@
 # DNS Strategy
 
-This document outlines the DNS strategy for the homelab network. The goal is to provide ad-blocking via a local AdGuard Home instance while retaining the UniFi router for internal DNS resolution and ensuring redundancy.
+This document outlines the DNS strategy for the homelab network. The approach prioritizes simplicity by using the Unifi router as the internal resolver with NextDNS as the upstream provider for ad-blocking and privacy.
 
 ## DNS Resolution Flow
 
-The primary DNS resolver for trusted networks is the AdGuard Home instance `gatekeeper-53` (`10.0.40.53`). The diagram below illustrates the query path.
+All clients use the Unifi router as their DNS server. The router handles internal domain resolution and forwards external queries to NextDNS.
 
 ```mermaid
 graph LR
-    Client["Client Device"] -- "DNS Query" --> AdGuard
+    Client["Client Device"] -- "DNS Query" --> Router
 
     subgraph "Resolution Path"
-        AdGuard{"AdGuard Home<br/>gatekeeper-53"} -- "Query for *.krapulax.home?" --> Decision{ }
-        Decision -- "Yes" --> UniFi["UniFi Router<br/>10.0.40.1"]
-        Decision -- "No" --> Quad9["Quad9<br/>dns10.quad9.net"]
+        Router{"UniFi Router<br/>.1 on each subnet"} -- "Query for *.krapulax.home?" --> Decision{ }
+        Decision -- "Yes" --> Local["Local Resolution"]
+        Decision -- "No" --> NextDNS["NextDNS<br/>(External)"]
     end
 
-    UniFi -- "Internal IP" --> Client
-    Quad9 -- "External IP" --> Client
+    Local -- "Internal IP" --> Client
+    NextDNS -- "External IP" --> Client
 ```
 
 The resolution path is as follows:
-1.  **Client Device** sends a DNS query to AdGuard Home (`gatekeeper-53`).
-2.  **AdGuard Home** filters the request against its blocklists.
-3.  If the query is for the internal `krapulax.home` domain, AdGuard forwards it to the UniFi router (`10.0.40.1`) for local resolution.
-4.  For all other queries, AdGuard forwards them to its configured upstream DNS provider (Quad9).
+1. **Client Device** sends a DNS query to the Unifi router (`.1` on their subnet).
+2. If the query is for the internal `krapulax.home` domain, the router resolves it locally.
+3. For all other queries, the router forwards them to **NextDNS** for resolution with ad-blocking and privacy filtering.
 
-## Upstream DNS (AdGuard Configuration)
+## Unifi Router as DNS Server
 
-The AdGuard Home instance is configured in **Settings -> DNS settings -> Upstream DNS servers**. The following combined configuration provides external resolution via Quad9 (using DNS-over-HTTPS) and internal resolution via the UniFi router:
+Each network uses its gateway as the DNS server:
 
-```
-https://dns10.quad9.net/dns-query
-[/krapulax.home/]10.0.40.1
-```
+| Network | DNS Server |
+|---------|------------|
+| Default (192.168.1.0/24) | `192.168.1.1` |
+| USER (10.0.10.0/24) | `10.0.10.1` |
+| IOT (10.0.20.0/24) | `10.0.20.1` |
+| DEV-INFRA (10.0.30.0/24) | `10.0.30.1` |
+| PROD-INFRA (10.0.40.0/24) | `10.0.40.1` |
+| GUEST (10.0.80.0/24) | `10.0.80.1` |
 
-## Network DNS Resolution
+## Upstream DNS (NextDNS)
 
-### Trusted Networks
-The following networks are configured via DHCP to use the AdGuard Home instance as their primary DNS server, with the UniFi router as a secondary for fallback:
+The Unifi router is configured to forward external DNS queries to **NextDNS**, a cloud-based DNS service that provides:
 
-- **USERS (`10.0.10.0/24`)**: `10.0.40.53`, `10.0.10.1`
-- **DEV-INFRA (`10.0.30.0/24`)**: `10.0.40.53`, `10.0.30.1`
-- **PROD-INFRA (`10.0.40.0/24`)**: `10.0.40.53`, `10.0.40.1`
+- **Ad-blocking**: Network-wide advertisement filtering
+- **Privacy**: Tracker blocking and encrypted DNS
+- **Security**: Malware and phishing protection
+- **Analytics**: Query logging and insights (optional)
 
-### Isolated Networks (Exceptions)
-The following networks remain isolated and use public DNS servers directly to prevent access to the internal network:
-
-- **GUEST Network**: Uses OpenDNS for content filtering and security.
-- **IOT Network**: Uses OpenDNS to isolate IoT device traffic.
-
-The OpenDNS servers used are:
-- `208.67.222.222`
-- `208.67.220.220`
+NextDNS is configured in the UDM-PRO under **Settings → Internet → WAN → DNS Server**.
 
 ## Internal DNS
 
-Internal network resolution for the `krapulax.home` domain is managed by the UniFi router. As specified in the upstream DNS configuration, AdGuard uses a conditional forwarding rule (`[/krapulax.home/]10.0.40.1`) to direct any queries for this domain to the router (`10.0.40.1`). This keeps local DNS management centralized on the UniFi platform.
+Internal network resolution for the `krapulax.home` domain is managed directly by the UniFi router. DNS records are provisioned via Terraform in the [homelab-terraform-unifi](https://github.com/fabricesemti80/homelab-terraform-unifi) repository.
+
+Key internal DNS records:
+
+| Hostname | IP Address | Type |
+|----------|------------|------|
+| `pve-0.krapulax.home` | `10.0.40.10` | A |
+| `pve-1.krapulax.home` | `10.0.40.11` | A |
+| `pve-2.krapulax.home` | `10.0.40.12` | A |
+| `swarm.krapulax.home` | `10.0.40.40` | A |
+| `portainer.krapulax.home` | → swarm | CNAME |
+| `homepage.krapulax.home` | → swarm | CNAME |
+| `traefik.krapulax.home` | → swarm | CNAME |
 
 ## Public DNS
 
-For services that are accessible from the internet, the domain `krapulax.dev` is used. The DNS records for this domain are managed through Cloudflare.
+For services accessible from the internet, the domain `krapulax.dev` is used. DNS records are managed through Cloudflare, with traffic routed via Cloudflare Tunnels.
 
 ## Verification
 
-To verify that the AdGuard instance is correctly forwarding local domain queries to the UniFi router, use the `dig` command from a client machine on the network. Point the query directly at the AdGuard server (`gatekeeper-53` or `10.0.40.53`).
-
-A successful query for an internal hostname (e.g., `dokploy.krapulax.home`) should return the correct internal IP address from the AdGuard server, indicating that the conditional forwarding is working.
-
-### Example Test
+To verify DNS resolution is working correctly:
 
 ```sh
-dig @gatekeeper-53 dokploy.krapulax.home
+# Test internal resolution
+dig @10.0.40.1 pve-0.krapulax.home
+
+# Test external resolution (should show NextDNS filtering)
+dig @10.0.40.1 example.com
 ```
 
-A successful response will look similar to this, showing the internal IP in the `ANSWER SECTION`:
+A successful internal query will show the internal IP:
 
 ```
 ;; ANSWER SECTION:
-dokploy.krapulax.home.	0	IN	A	10.0.30.20
+pve-0.krapulax.home.	0	IN	A	10.0.40.10
 ```
-

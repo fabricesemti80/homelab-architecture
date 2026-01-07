@@ -1,30 +1,32 @@
 # Network Documentation
 
-This document describes the network setup in the homelab. The network architecture aims to use K.I.S.S. principles. The central point of the system is the Unifi-based firewall and switch.
+This document describes the network setup in the homelab. The network architecture aims to use K.I.S.S. principles. The central point of the system is the Unifi-based firewall and switch, managed as code via Terraform.
 
 ## Networks
 
 The following networks are present. VLAN IDs correspond to the third octet of the subnet.
 
-| VLAN id | Network Name | Subnet CIDR    | Description                                 | DNS Servers                          | FW Rules    |
-| ------- | ------------ | -------------- | ------------------------------------------- | ------------------------------------ | ----------- |
-| 1       | Default      | 192.168.1.0/24 | Management LAN (Unifi Devices)              | `192.168.1.1` (Router)               | Allow All   |
-| 10      | USERS        | 10.0.10.0/24   | Trusted devices (Laptops, Phones)           | `gatekeeper-53`<br>`10.0.10.1` (Router) | Allow All   |
-| 20      | IOT          | 10.0.20.0/24   | IoT Devices                                 | `208.67.222.222`<br>`208.67.220.220` | Isolated    |
-| 30      | DEV-INFRA    | 10.0.30.0/24   | Development Infrastructure (K8s Nodes/Pods) | `gatekeeper-53`<br>`10.0.30.1` (Router) | Restricted  |
-| 40      | PROD-INFRA   | 10.0.40.0/24   | Production Infrastructure                   | `gatekeeper-53`<br>`10.0.40.1` (Router) | Restricted  |
-| 50      | PROD-CEPH    | 10.0.50.0/24   | Dedicated Storage Cluster Network           | -                                    | No Internet |
-| 80      | GUEST        | 10.0.80.0/24   | Guest Network                               | `208.67.222.222`<br>`208.67.220.220` | Isolated    |
+| VLAN id | Network Name | Subnet CIDR    | Description                                 | DNS Server         | FW Rules    |
+| ------- | ------------ | -------------- | ------------------------------------------- | ------------------ | ----------- |
+| 1       | Default      | 192.168.1.0/24 | Management LAN (Unifi Devices)              | `192.168.1.1`      | Allow All   |
+| 10      | USER         | 10.0.10.0/24   | Trusted devices (Laptops, Phones)           | `10.0.10.1`        | Allow All   |
+| 20      | IOT          | 10.0.20.0/24   | IoT Devices                                 | `10.0.20.1`        | Isolated    |
+| 30      | DEV-INFRA    | 10.0.30.0/24   | Development Infrastructure (Docker Swarm)  | `10.0.30.1`        | Restricted  |
+| 40      | PROD-INFRA   | 10.0.40.0/24   | Production Infrastructure                   | `10.0.40.1`        | Restricted  |
+| 70      | PROD-CEPH    | 10.0.70.0/24   | Dedicated Ceph Storage Cluster Network      | -                  | No Internet |
+| 80      | GUEST        | 10.0.80.0/24   | Guest Network                               | `10.0.80.1`        | Isolated    |
+
+> **Note**: All networks use the Unifi router as DNS resolver (`.1` on each subnet). The router forwards external queries to NextDNS.
 
 ## Virtual Private Networks (VPNs)
 
 ### Tailscale
 
-For a detailed overview of the Tailscale setup, see the [Tailscale Configuration](../tools/tailscale.md) document.
+For a detailed overview of the Tailscale setup, see the [Tailscale Configuration](tools/tailscale.md) document.
 
 Tailscale creates a virtual private network that connects devices directly.
 
-*   **DNS**: Tailscale is configured to use Quad9 as its global DNS resolver. For internal `krapulax.home` domains, it uses the UniFi router (`10.0.40.1`) as a split DNS resolver.
+*   **DNS**: Tailscale is configured to use NextDNS as its global resolver. For internal `krapulax.home` domains, it uses the UniFi router as a split DNS resolver.
 
 ## Network Diagram
 
@@ -33,11 +35,11 @@ graph TB
     UDM["UDM-PRO Firewall/Router"]
 
     DEF["Default<br/>192.168.1.0/24"]
-    USR["USERS<br/>10.0.10.0/24"]
+    USR["USER<br/>10.0.10.0/24"]
     IOT["IOT<br/>10.0.20.0/24"]
     DEV["DEV-INFRA<br/>10.0.30.0/24"]
     PROD["PROD-INFRA<br/>10.0.40.0/24"]
-    CEPH["PROD-CEPH<br/>10.0.50.0/24"]
+    CEPH["PROD-CEPH<br/>10.0.70.0/24"]
     GST["GUEST<br/>10.0.80.0/24"]
 
     UDM --> DEF
@@ -53,21 +55,11 @@ graph TB
 
 For a comprehensive overview of the DNS configuration, see the [DNS Strategy](dns.md) document.
 
-The DNS strategy balances security, privacy, and performance.
+### DNS Resolution
 
-### AdGuard-Based DNS for Trusted Networks
-
-For trusted networks (`USERS`, `DEV-INFRA`, `PROD-INFRA`), the primary DNS server provided via DHCP is the **AdGuard Home instance (`gatekeeper-53`)**. The router's IP for each subnet is provided as a secondary DNS server for fallback.
-
-The AdGuard instance handles ad-blocking and forwards requests for internal domains to the UniFi router and external domains to upstream providers. For more details, see the [DNS Strategy](dns.md) document.
-
-### Exceptions (OpenDNS)
-
-The `IOT` and `GUEST` networks bypass the internal resolver to ensure isolation. Clients on these networks are assigned **OpenDNS** servers directly via DHCP.
-
-* **OpenDNS IPs**:
-  * `208.67.222.222`
-  * `208.67.220.220`
+All networks use the **Unifi router** (`.1` on each subnet) as the DNS server provided via DHCP. The router handles:
+- **Internal queries**: Resolves `krapulax.home` domain locally
+- **External queries**: Forwards to **NextDNS** for ad-blocking, privacy, and security filtering
 
 ### Domain Resolution
 

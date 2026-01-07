@@ -12,34 +12,45 @@ The list includes only devices set up with fixed IPs or holding critical roles. 
   - **Role**: NFS Storage
   - **OS**: QTS
   - **IP**: `10.0.40.2`
-  - **DNS**: `qnap.krapulax.home` (TBD)
-  - **Notes**: Provides NFS for Proxmox (ISO, Backup), Docker data, Media files, K8s data. Ports: 80, 443, 22.
+  - **DNS**: `qnap.krapulax.home`
+  - **Notes**: Provides NFS for Proxmox (ISO, Backup, Templates), Docker data, Media files. Ports: 80, 443, 22.
 
 - **Proxmox Nodes (x3)**
-  - **Role**: Hypervisor
-  - **Hardware**: Minisforum Mini PCs
-  - **OS**: Proxmox VE
-  - **IP**: `10.0.40.10`,`10.0.40.11`,`10.0.40.12`
-  - **DNS**: `pve-0.krapulax.home`,`pve-1.krapulax.home`,`pve-2.krapulax.home` (TBD)
-  - **Notes**: Hosts VMs and Containers (including Docker media server).
+  - **Role**: Hypervisor + Ceph Storage
+  - **Hardware**: Minisforum Mini PCs (NVMe + dual NIC)
+  - **OS**: Proxmox VE (Debian 12)
+  - **Management IPs**: `10.0.40.10`, `10.0.40.11`, `10.0.40.12` (VLAN 40)
+  - **Ceph IPs**: `10.0.70.10`, `10.0.70.11`, `10.0.70.12` (VLAN 70)
+  - **HA VIP**: `10.0.40.15` (Keepalived floating IP for GUI access)
+  - **DNS**: `pve-0.krapulax.home`, `pve-1.krapulax.home`, `pve-2.krapulax.home`
+  - **Notes**: Hosts VMs and Containers. Dual-homed: vmbr0 (management with internet) and eth0 (Ceph-only, no gateway).
 
-- **Ceph Nodes (x3)**
-  - **Role**: Distributed Storage
-  - **Hardware**: Minisforum Mini PCs
-  - **OS**: Proxmox VE
-  - **IP**: `10.0.50.10`,`10.0.50.11`,`10.0.50.12` *(TBD; currently still on 10.0.70.0/24...)*
-  - **Notes**: Dedicated storage cluster nodes.
+- **Docker Media Server**
+  - **Role**: Home Media Server (HMS) Stack
+  - **Hardware**: Proxmox VM
+  - **OS**: Ubuntu
+  - **IP**: `10.0.40.30`
+  - **DNS**: `dkr-media-0.krapulax.home`
+  - **Notes**: Runs Plex, Jellyfin, Sonarr, Radarr, and *arr stack via ansible-hms-docker.
+
+- **Docker Swarm Cluster (x3)**
+  - **Role**: Container Orchestration
+  - **Hardware**: Proxmox VMs
+  - **OS**: Ubuntu
+  - **IPs**: `10.0.30.21`, `10.0.30.22`, `10.0.30.23` (DEV-INFRA VLAN 30)
+  - **Swarm VIP**: `10.0.40.40`
+  - **Notes**: Docker Swarm managers running platform services (Traefik, Portainer, Homepage, GitLab, etc.) via project-dockerlab.
 
 ### Network Gear
 
 - **UDM-PRO**
   - **Model**: Unifi Dream Machine Pro
-  - **Role**: Router / Firewall / Gateway
+  - **Role**: Router / Firewall / Gateway / DNS
   - **Connections**:
     - **Gateway**: `.1` on ALL ranges.
     - **Uplink**: ISP (YourFibre).
     - **Downlinks**: Unifi 24P PoE, QNAP NAS, 2x Pi Zeros.
-  - **Services**: DHCP, Firewall, Routing.
+  - **Services**: DHCP, Firewall, Routing, Internal DNS (with NextDNS upstream).
   - **Ports**: 80, 443, 22 open.
 
 - **Main Switch**
@@ -49,11 +60,10 @@ The list includes only devices set up with fixed IPs or holding critical roles. 
     - **Uplink**: UDM-PRO.
     - **Downlink**: Unifi 8P PoE.
     - **PoE Devices**: 3x Cameras, 1x Doorbell, 1x Chime, 2x WAPs.
-    - **IP**: *TBA*
 
 - **Cluster Switch**
   - **Model**: Unifi 8P PoE
   - **Role**: Distribution Switch
   - **Connections**:
     - **Uplink**: Unifi 24P PoE.
-    - **Downlinks**: 3x Proxmox Nodes, 3x Ceph Nodes.
+    - **Downlinks**: 3x Proxmox Nodes (dual-homed for management + Ceph).

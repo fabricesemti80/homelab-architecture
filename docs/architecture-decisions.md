@@ -4,42 +4,66 @@ This document tracks key architectural decisions, their context, and the future 
 
 ## Decisions
 
-### 1. DNS Filtering with AdGuard Home
+### 1. DNS Strategy - NextDNS with Unifi Router
 
-* **Decision**: Implement a self-hosted AdGuard Home instance for network-wide DNS filtering, while retaining the UniFi router for internal DNS resolution.
-* **Context**: This decision was made to enhance network security and block advertisements without sacrificing the convenience of local DNS management provided by the UniFi router.
-* **Details**: For a comprehensive overview of this decision, see [ADR-0001: Implement AdGuard for DNS Filtering](./architecture-decisions/0001-implement-adguard-for-dns-filtering.md).
+* **Decision**: Use **NextDNS** (external cloud service) as upstream DNS for ad-blocking and privacy, with the **Unifi router** handling internal DNS resolution.
+* **Context**: Previously used self-hosted AdGuard Home, but switched to NextDNS for simplicity and reduced maintenance. The Unifi router natively handles internal `krapulax.home` domain resolution.
+* **Status**: ✅ Deployed.
+* **Benefits**:
+  - No self-hosted infrastructure to maintain
+  - Centralized DNS configuration via Unifi
+  - Built-in analytics and blocking via NextDNS dashboard
 
-### 2. Secret Management
+### 2. Secret Management - Multi-Provider Approach
 
-* **Decision**: Transition to **1Password** for secret storage, injecting secrets at runtime.
-* **Context**: Currently, secrets often live in local `.env` files. While these are backed up via iCloud Drive/Time Machine (mitigating data loss), they pose a security risk (plain text on disk).
-* **Goal**: Move to a "zero-trust" model where secrets are pulled from 1Password via CLI or Operator at deployment time, avoiding persistent files on disk.
+* **Decision**: Use multiple secret management providers based on context:
+  - **1Password**: For Terraform configurations (via `op` CLI) - used in `terraform/homelab-terraform-unifi`
+  - **Doppler**: For Docker Swarm and application secrets - used in `project-dockerlab`
+  - **Environment files**: For local development and Ansible credentials
+* **Context**: Different tooling requires different secret management approaches. 1Password works well with Terraform's external data source, while Doppler integrates seamlessly with direnv and Docker environments.
+* **Status**: ✅ Implemented across repositories.
 
-### 3. Storage & Single Points of Failure (SPOF)
+### 3. Storage Architecture - Hybrid Approach
 
-* **Decision**: Use **QNAP NAS** for bulk storage and Backups, but aim to migrate "Hot" data to **Ceph**.
-* **Context**: The QNAP NAS is currently a SPOF for Docker/K8s volumes. If it fails, services stop.
-* **Strategy**:
-    1. Leverage the 3-node Ceph cluster for "live" application data (high availability).
-    2. Retain QNAP for massive static media (Plex libraries) and backup targets (Proxmox Backup Server).
-    3. **Gap**: The NAS itself needs a backup strategy (e.g., external USB HDD or secondary NAS).
+* **Decision**: Use a hybrid storage architecture:
+  - **Ceph**: For "hot" VM/container storage (high availability, automatic failover)
+  - **NFS (QNAP)**: For bulk storage (media), backups, ISOs, and templates
+* **Context**: The QNAP NAS was previously a SPOF. By using Ceph for live application data, we achieve HA while retaining NFS for cost-effective bulk storage.
+* **Status**: ✅ Ceph cluster deployed on 10.0.70.0/24 network.
+
+### 4. Container Orchestration - Docker Swarm
+
+* **Decision**: Use Docker Swarm for platform services instead of Kubernetes.
+* **Context**: Docker Swarm provides sufficient orchestration for the homelab use case with significantly less complexity than Kubernetes. The 3-manager cluster provides HA without the overhead of etcd management.
+* **Status**: ✅ Deployed via project-dockerlab.
+
+### 5. External Access - Cloudflare Zero Trust
+
+* **Decision**: Use Cloudflare Tunnels with Zero Trust authentication for external access.
+* **Context**: This eliminates the need for open ports on the firewall and provides enterprise-grade authentication (email OTP/SSO) without self-hosting additional infrastructure.
+* **Status**: ✅ Deployed for all public services.
+
+### 6. Proxmox High Availability
+
+* **Decision**: Use Keepalived with VRRP for Proxmox GUI high availability.
+* **Context**: A floating VIP (`10.0.40.15`) ensures consistent access to the Proxmox web UI regardless of which node is master.
+* **Status**: ✅ Deployed via `ansible/infra-ansible-home-proxmoxhosts`.
 
 ## Roadmap / Todo List
 
 ### Short Term (Immediate Improvements)
 
-- [ ] **Secret Migration**: Systematically replace local `.env` file references with `1password` CLI injection in scripts/Terraform.
-* [ ] **NAS Backup**: Implement a "Cold Backup" for the QNAP NAS (e.g., large external USB drive) to mitigate total data loss risk.
+- [ ] **NAS Backup**: Implement a "Cold Backup" for the QNAP NAS (e.g., large external USB drive) to mitigate total data loss risk
 
 ### Medium Term (Architecture Evolution)
 
-- [ ] **Data Migration**: Move critical "live" Docker/Kubernetes volumes from NFS (QNAP) to Ceph (Proxmox Cluster) to remove the storage SPOF.
-* [ ] **Ceph Networking (Dual-Homed)**: Confirm the Proxmox/Ceph nodes maintain their dual-homed configuration during the migration to VLAN 50:
-    1. **Management Interface** (VLAN 40): Has Default Gateway (`10.0.40.1`). Used for Proxmox clustering, SSH, and **OS Updates** (apt/internet access).
-    2. **Storage Interface** (Moving to VLAN 50): High bandwidth, **NO Default Gateway**. Used *only* for Ceph replication/traffic.
-  * *Status*: Current setup allows updates successfully via VLAN 40. This pattern must be preserved.
+- [ ] **Media Server Migration**: Consider migrating `docker/ansible-hms-docker` services to Docker Swarm for unified management
+- [ ] **Monitoring Stack**: Deploy Prometheus/Grafana or similar for centralized monitoring
+- [ ] **Log Aggregation**: Deploy Loki or similar for centralized logging
 
 ### Long Term (Scaling)
 
-- [x] **Advanced DNS**: Deployed AdGuard Home for network-wide filtering, as documented in [ADR-0001](./architecture-decisions/0001-implement-adguard-for-dns-filtering.md).
+- [x] **DNS Filtering**: Migrated to NextDNS for network-wide filtering
+- [x] **Docker Swarm**: Platform services running on HA Swarm cluster
+- [x] **Ceph Storage**: Distributed storage operational
+- [ ] **GitOps**: Full GitOps workflow with ArgoCD or FluxCD (if migrating to Kubernetes)
