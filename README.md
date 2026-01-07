@@ -6,12 +6,12 @@ Welcome to the documentation for my homelab setup. This repository contains deta
 
 1. `Automation` and `Infrastructure-as-Code` first
 2. While I think complexity is unavoidable, I try to use `K.I.S.S` principles
-3. The deployments heavily utilize tools such as `Ansible`, `Docker`, `Terraform`
+3. The deployments heavily utilise tools such as `Ansible`, `Docker`, `Terraform`
 4. For management of secrets, there are multiple approaches based on context:
-   1. `1Password` (via `op` CLI) for Terraform configurations
-   2. `Doppler` for Docker Swarm and application secrets (with direnv integration)
-   3. Environment files for local development and Ansible credentials
-5. I favour to use open source tools and free tools, but if needed, I am happy to pay for software or services with a fairly limited budget
+   1. `Doppler` preferred (still migrating secrets to this)
+   2. `1password` (for browser plugin)
+   3. Environment files (phasing out these in favour of Doppler)
+5. I favour using open source tools and free tools, but if needed, I am happy to pay for software or services with a fairly limited budget
 
 ## Architecture Overview
 
