@@ -12,7 +12,6 @@ The list includes only devices set up with fixed IPs or holding critical roles. 
   - **Role**: NFS Storage
   - **OS**: QTS
   - **IP**: `10.0.40.2`
-  - **DNS**: `qnap.krapulax.home`
   - **Notes**: Provides NFS for Proxmox (ISO, Backup, Templates), Docker data, Media files. Ports: 80, 443, 22.
 
 - **Proxmox Nodes (x3)**
@@ -22,7 +21,6 @@ The list includes only devices set up with fixed IPs or holding critical roles. 
   - **Management IPs**: `10.0.40.10`, `10.0.40.11`, `10.0.40.12` (VLAN 40)
   - **Ceph IPs**: `10.0.70.10`, `10.0.70.11`, `10.0.70.12` (VLAN 70)
   - **HA VIP**: `10.0.40.15` (Keepalived floating IP for GUI access)
-  - **DNS**: `pve-0.krapulax.home`, `pve-1.krapulax.home`, `pve-2.krapulax.home`
   - **Notes**: Hosts VMs and Containers. Dual-homed: vmbr0 (management with internet) and eth0 (Ceph-only, no gateway).
 
 - **Docker Media Server**
@@ -30,8 +28,8 @@ The list includes only devices set up with fixed IPs or holding critical roles. 
   - **Hardware**: Proxmox VM
   - **OS**: Ubuntu
   - **IP**: `10.0.40.30`
-  - **DNS**: `dkr-media-0.krapulax.home`
   - **Notes**: Runs Plex, Jellyfin, Sonarr, Radarr, and *arr stack via ansible-hms-docker.
+  - **DNS**: This stack uses the `krapulax.dev` domain currently.
 
 - **Docker Swarm Cluster (x3)**
   - **Role**: Container Orchestration
@@ -40,6 +38,7 @@ The list includes only devices set up with fixed IPs or holding critical roles. 
   - **IPs**: `10.0.30.21`, `10.0.30.22`, `10.0.30.23` (DEV-INFRA VLAN 30)
   - **Swarm VIP**: `10.0.40.40`
   - **Notes**: Docker Swarm managers running platform services (Traefik, Portainer, Homepage, GitLab, etc.) via project-dockerlab.
+  - **DNS**: This stack uses the `krapulax.net` domain currently.
 
 ### Network Gear
 
@@ -50,7 +49,7 @@ The list includes only devices set up with fixed IPs or holding critical roles. 
     - **Gateway**: `.1` on ALL ranges.
     - **Uplink**: ISP (YourFibre).
     - **Downlinks**: Unifi 24P PoE, QNAP NAS, 2x Pi Zeros.
-  - **Services**: DHCP, Firewall, Routing, Internal DNS (with NextDNS upstream).
+  - **Services**: DHCP, Firewall, Routing (DNS provided by NextDNS).
   - **Ports**: 80, 443, 22 open.
 
 - **Main Switch**

@@ -9,8 +9,8 @@ This document provides an overview of the services running in the homelab.
   - Scope: All VLANs
 
 - **DNS**
-  - **Internal Resolver**: UDM-PRO (`.1` on each subnet, manages `krapulax.home`)
   - **Upstream**: NextDNS (ad-blocking, privacy, security filtering)
+  - **Public Domains**: `krapulax.dev` & `krapulax.net` (managed by Cloudflare)
 
 - **VPN**
   - **Tailscale**: Mesh VPN for remote access
@@ -20,17 +20,21 @@ This document provides an overview of the services running in the homelab.
 - **NFS**
   - Provided by QNAP NAS (`10.0.40.2`)
   - Exports:
+    - `/swarm-appdata` - Docker Swarm application data *(legacy / to be deleted)*
+    - `/proxmox-template` - Proxmox VM templates
+    - `/proxmox-iso` - Proxmox ISO images
     - `/proxmox-backup` - Proxmox backup storage
-    - `/proxmox-iso` - ISO images and cloud images
-    - `/proxmox-template` - Container and VM templates
-    - `/media` - Media library for Docker Swarm
+    - `/portainer-appdata` - Portainer application data *(legacy / to be deleted)*
+    - `/media` - Media library
+    - `/docker-appdata` - Docker application data *(legacy / to be deleted)*
+    - `/data` - General data *(legacy / to be deleted)*
 
 - **Ceph**
   - Distributed storage provided by 3x Proxmox nodes
   - Network: `10.0.70.0/24` (VLAN 70)
   - Pools:
-    - `vm-storage` - Primary VM/container storage (RBD)
-    - `cephfs-vm` - CephFS for snippets and shared data
+    - `ceph-proxmox-rbd` - Primary VM/container storage (RBD)
+    - `ceph-proxmox-fs` - CephFS for snippets and shared data
   - Features: High availability, automatic failover
 
 ## Virtualization & Infrastructure
@@ -55,14 +59,14 @@ Services running on the Docker Swarm cluster, exposed via Cloudflare Tunnels:
 | Service | Description | Access |
 |---------|-------------|--------|
 | **Traefik** | Ingress controller and reverse proxy | Internal |
-| **Portainer** | Docker Swarm management UI | `portainer.krapulax.home` |
-| **Homepage** | Dashboard | `homepage.krapulax.home` |
-| **GitLab** | Git repository hosting | `*.krapulax.dev` |
+| **Portainer** | Docker Swarm management UI | `portainer.krapulax.net` |
+| **Homepage** | Dashboard | `homepage.krapulax.net` |
+| **GitLab** | Git repository hosting | `*.krapulax.net` |
 | **Beszel** | Monitoring agent | Internal |
 | **Gatus** | Status monitoring | Internal |
 | **Glance** | Service overview | Internal |
 | **Filebrowser** | Web file manager | Internal |
-| **Dockpeek** | Docker container monitoring | `dockpeek.krapulax.home` |
+| **Dockpeek** | Docker container monitoring | `dockpeek.krapulax.net` |
 | **Cloudflared** | Cloudflare Tunnel agent | Internal |
 
 ### Home Media Server Stack (`docker/ansible-hms-docker`)
@@ -79,7 +83,7 @@ Services running on the dedicated media server VM (`10.0.40.30`):
 | **Overseerr** | ✅ | Media request management |
 | **Traefik** | ✅ | Reverse proxy with SSL |
 | **Homepage** | ✅ | Dashboard |
-| Prowlarr | ⬜ | Indexer management |
+| Prowlarr | ✅  | Indexer management |
 | Bazarr | ⬜ | Subtitle management |
 | Lidarr | ⬜ | Music management |
 | Readarr | ⬜ | Book management |
@@ -106,7 +110,7 @@ User → Cloudflare Edge → Zero Trust Auth → Cloudflared → Traefik → Ser
 - **Authentication**: Email OTP / SSO
 - **Bypass policies**: GitLab (public), Beszel (agent telemetry)
 
-### Internal Access
+### Domain Access
 
-- **Domain**: `krapulax.home`
-- **DNS**: Managed by UDM-PRO
+- **Media Server**: `krapulax.dev`
+- **Docker Swarm**: `krapulax.net`

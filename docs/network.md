@@ -26,7 +26,7 @@ For a detailed overview of the Tailscale setup, see the [Tailscale Configuration
 
 Tailscale creates a virtual private network that connects devices directly.
 
-*   **DNS**: Tailscale is configured to use NextDNS as its global resolver. For internal `krapulax.home` domains, it uses the UniFi router as a split DNS resolver.
+*   **DNS**: Tailscale is configured to use NextDNS as its global resolver.
 
 ## Network Diagram
 
@@ -58,10 +58,8 @@ For a comprehensive overview of the DNS configuration, see the [DNS Strategy](dn
 ### DNS Resolution
 
 All networks use the **Unifi router** (`.1` on each subnet) as the DNS server provided via DHCP. The router handles:
-- **Internal queries**: Resolves `krapulax.home` domain locally
-- **External queries**: Forwards to **NextDNS** for ad-blocking, privacy, and security filtering
+- All queries are forwarded to **NextDNS** for ad-blocking, privacy, and security filtering.
 
 ### Domain Resolution
 
-* **Internal**: `krapulax.home` (Managed by UDM-PRO)
-* **Public**: `krapulax.dev` (Managed by Cloudflare)
+* **Public**: `krapulax.dev` and `krapulax.net` (Managed by Cloudflare)

@@ -1,29 +1,21 @@
 # DNS Strategy
 
-This document outlines the DNS strategy for the homelab network. The approach prioritizes simplicity by using the Unifi router as the internal resolver with NextDNS as the upstream provider for ad-blocking and privacy.
+This document outlines the DNS strategy for the homelab network. All DNS resolution is handled by NextDNS as the upstream provider for ad-blocking and privacy, with public domains managed via Cloudflare.
 
 ## DNS Resolution Flow
 
-All clients use the Unifi router as their DNS server. The router handles internal domain resolution and forwards external queries to NextDNS.
+All clients use the Unifi router as their DNS server, which forwards all queries to NextDNS.
 
 ```mermaid
 graph LR
-    Client["Client Device"] -- "DNS Query" --> Router
-
-    subgraph "Resolution Path"
-        Router{"UniFi Router<br/>.1 on each subnet"} -- "Query for *.krapulax.home?" --> Decision{ }
-        Decision -- "Yes" --> Local["Local Resolution"]
-        Decision -- "No" --> NextDNS["NextDNS<br/>(External)"]
-    end
-
-    Local -- "Internal IP" --> Client
-    NextDNS -- "External IP" --> Client
+    Client["Client Device"] -- "DNS Query" --> Router["UniFi Router"]
+    Router -- "Forwarded Query" --> NextDNS["NextDNS<br/>(External)"]
+    NextDNS -- "Resolved IP" --> Client
 ```
 
 The resolution path is as follows:
 1. **Client Device** sends a DNS query to the Unifi router (`.1` on their subnet).
-2. If the query is for the internal `krapulax.home` domain, the router resolves it locally.
-3. For all other queries, the router forwards them to **NextDNS** for resolution with ad-blocking and privacy filtering.
+2. The router forwards the query to **NextDNS** for resolution, which provides ad-blocking and privacy filtering.
 
 ## Unifi Router as DNS Server
 
@@ -49,41 +41,18 @@ The Unifi router is configured to forward external DNS queries to **NextDNS**, a
 
 NextDNS is configured in the UDM-PRO under **Settings → Internet → WAN → DNS Server**.
 
-## Internal DNS
-
-Internal network resolution for the `krapulax.home` domain is managed directly by the UniFi router. DNS records are provisioned via Terraform in the [homelab-terraform-unifi](https://github.com/fabricesemti80/homelab-terraform-unifi) repository.
-
-Key internal DNS records:
-
-| Hostname | IP Address | Type |
-|----------|------------|------|
-| `pve-0.krapulax.home` | `10.0.40.10` | A |
-| `pve-1.krapulax.home` | `10.0.40.11` | A |
-| `pve-2.krapulax.home` | `10.0.40.12` | A |
-| `swarm.krapulax.home` | `10.0.40.40` | A |
-| `portainer.krapulax.home` | → swarm | CNAME |
-| `homepage.krapulax.home` | → swarm | CNAME |
-| `traefik.krapulax.home` | → swarm | CNAME |
-
 ## Public DNS
 
-For services accessible from the internet, the domain `krapulax.dev` is used. DNS records are managed through Cloudflare, with traffic routed via Cloudflare Tunnels.
+Public DNS is managed through Cloudflare for two separate domains, with traffic routed via Cloudflare Tunnels.
+
+- **`krapulax.dev`**: Used for the media server stack.
+- **`krapulax.net`**: Used for the Docker Swarm cluster and other infrastructure services.
+
 
 ## Verification
 
-To verify DNS resolution is working correctly:
+To verify DNS resolution is working correctly, you can test external resolution, which should show NextDNS filtering:
 
 ```sh
-# Test internal resolution
-dig @10.0.40.1 pve-0.krapulax.home
-
-# Test external resolution (should show NextDNS filtering)
 dig @10.0.40.1 example.com
-```
-
-A successful internal query will show the internal IP:
-
-```
-;; ANSWER SECTION:
-pve-0.krapulax.home.	0	IN	A	10.0.40.10
 ```

@@ -4,14 +4,14 @@ This document tracks key architectural decisions, their context, and the future 
 
 ## Decisions
 
-### 1. DNS Strategy - NextDNS with Unifi Router
+### 1. DNS Strategy - NextDNS with Cloudflare
 
-* **Decision**: Use **NextDNS** (external cloud service) as upstream DNS for ad-blocking and privacy, with the **Unifi router** handling internal DNS resolution.
-* **Context**: Previously used self-hosted AdGuard Home, but switched to NextDNS for simplicity and reduced maintenance. The Unifi router natively handles internal `krapulax.home` domain resolution.
+* **Decision**: Use **NextDNS** (external cloud service) as the sole upstream DNS for ad-blocking and privacy. Public domains (`krapulax.dev` and `krapulax.net`) are managed via **Cloudflare**.
+* **Context**: Previously used self-hosted AdGuard Home and Unifi for internal DNS, but switched to a unified NextDNS/Cloudflare model to simplify the network and remove reliance on internal-only domains.
 * **Status**: ✅ Deployed.
 * **Benefits**:
   - No self-hosted infrastructure to maintain
-  - Centralized DNS configuration via Unifi
+  - Centralized public DNS management via Cloudflare
   - Built-in analytics and blocking via NextDNS dashboard
 
 ### 2. Secret Management - Multi-Provider Approach
